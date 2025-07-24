@@ -7,68 +7,63 @@ with open('Sura.pkl', 'rb') as file:
     model = pickle.load(file)
 
 # Page config
-st.set_page_config(page_title="Stock Predictor 🌧️", layout="wide")
-st.title("📈 Stock Market - Next Day Close Price Prediction")
+st.set_page_config(page_title="Stock Predictor Classic UI", layout="centered")
 
-# Weather selector
-theme = st.selectbox("Choose Theme 🌤️", ["Default", "Rainy", "Winter", "Summer"])
-
-# --- RAIN DROPS EFFECT ---
-if theme == "Rainy":
-    st.markdown(
-        """
-        <style>
+# Custom Classic Styling
+st.markdown("""
+    <style>
         body {
-            background: #0e0e0e;
-            overflow: hidden;
+            background-color: #f4f4f4;
+            font-family: 'Segoe UI', sans-serif;
         }
-        .rain {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 9999;
+        .main-title {
+            font-size: 40px;
+            font-weight: bold;
+            color: #333333;
+            text-align: center;
+            margin-top: 20px;
         }
-        .drop {
-            position: absolute;
-            bottom: 100%;
-            width: 2px;
-            height: 15px;
-            background: rgba(255, 255, 255, 0.4);
-            animation: fall 1s linear infinite;
+        .sub-text {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 40px;
         }
-        @keyframes fall {
-            to {
-                transform: translateY(100vh);
-            }
+        .stButton>button {
+            background-color: #2b7de9;
+            color: white;
+            font-weight: bold;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
         }
-        </style>
-        <div class="rain">
-        """ + 
-        ''.join([f'<div class="drop" style="left:{i}%; animation-delay: {i*0.03}s;"></div>' for i in range(100)]) +
-        """
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+    </style>
+""", unsafe_allow_html=True)
 
-# --- Inputs in Sidebar ---
-st.sidebar.header("Enter Stock Data")
+# Title
+st.markdown('<div class="main-title">📊 Stock Market Predictor</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-text">Predict the next day close price using market data</div>', unsafe_allow_html=True)
 
-date_input = st.sidebar.date_input("📅 Date")
-open_price = st.sidebar.number_input("Open Price", min_value=0.0)
-high_price = st.sidebar.number_input("High Price", min_value=0.0)
-low_price = st.sidebar.number_input("Low Price", min_value=0.0)
-close_price = st.sidebar.number_input("Close Price", min_value=0.0)
-volume = st.sidebar.number_input("Volume", min_value=0)
+# Inputs
+st.header("📥 Enter Today's Market Data")
+col1, col2 = st.columns(2)
 
-# Convert date
+with col1:
+    date_input = st.date_input("Date")
+    open_price = st.number_input("Open Price", min_value=0.0, format="%.2f")
+    high_price = st.number_input("High Price", min_value=0.0, format="%.2f")
+    
+with col2:
+    low_price = st.number_input("Low Price", min_value=0.0, format="%.2f")
+    close_price = st.number_input("Close Price", min_value=0.0, format="%.2f")
+    volume = st.number_input("Volume", min_value=0)
+
+# Convert date to UNIX
 unix_date = int(np.datetime64(date_input).astype(np.int64) // 10**9)
 
 # Predict button
-if st.sidebar.button("🚀 Predict Next Day Close"):
+st.markdown("### 📈 Prediction Result")
+if st.button("Predict Next Day Close"):
     input_data = [[unix_date, open_price, high_price, low_price, close_price, volume]]
     prediction = model.predict(input_data)
-    st.success(f"📊 Predicted Next Day Close Price: **${prediction[0]:.2f}**")
+    st.success(f"✅ Predicted Next Day Close Price: **${prediction[0]:.2f}**")
