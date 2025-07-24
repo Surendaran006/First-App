@@ -1,69 +1,114 @@
 import streamlit as st
 import numpy as np
 import pickle
+from datetime import date
 
-# Load model
+# Load the trained model
 with open('Sura.pkl', 'rb') as file:
     model = pickle.load(file)
 
-# Page config
-st.set_page_config(page_title="Stock Predictor Classic UI", layout="centered")
+# --- Page Config ---
+st.set_page_config(page_title="📈 Master Stock Predictor", layout="wide")
 
-# Custom Classic Styling
-st.markdown("""
+# --- Theme Toggle ---
+theme_mode = st.radio("🌗 Select Theme", ["Light", "Dark"], horizontal=True)
+
+# --- Font Style Toggle ---
+font_style = st.selectbox("🔢 Number Font Style", ["Digital", "Monospace", "Bold"])
+
+# --- Background Theme (Weather Mode) ---
+weather = st.selectbox("🌦️ Choose Weather Mode", ["Clear", "Rainy", "Snowy", "Sunset"])
+
+# --- Custom Styling Based on Selections ---
+bg_image = {
+    "Clear": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
+    "Rainy": "https://i.gifer.com/7VE.gif",
+    "Snowy": "https://i.gifer.com/ZZ5H.gif",
+    "Sunset": "https://images.unsplash.com/photo-1501973801540-537f08ccae7f"
+}[weather]
+
+# Color Themes
+text_color = "#ffffff" if theme_mode == "Dark" else "#000000"
+bg_color = "#0e0e0e" if theme_mode == "Dark" else "#f5f5f5"
+
+# Font Styles
+font_family = {
+    "Digital": "'Courier New', monospace",
+    "Monospace": "monospace",
+    "Bold": "'Segoe UI', sans-serif"
+}[font_style]
+
+# --- Apply All CSS ---
+st.markdown(f"""
     <style>
-        body {
-            background-color: #f4f4f4;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .main-title {
-            font-size: 40px;
-            font-weight: bold;
-            color: #333333;
-            text-align: center;
-            margin-top: 20px;
-        }
-        .sub-text {
-            text-align: center;
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 40px;
-        }
-        .stButton>button {
-            background-color: #2b7de9;
-            color: white;
-            font-weight: bold;
-            border-radius: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
+    body {{
+        background-image: url('{bg_image}');
+        background-size: cover;
+        background-attachment: fixed;
+        color: {text_color};
+    }}
+    .title {{
+        font-size: 40px;
+        font-weight: bold;
+        color: {text_color};
+        text-align: center;
+        margin-bottom: 5px;
+    }}
+    .subtitle {{
+        text-align: center;
+        color: {text_color};
+        font-size: 16px;
+        margin-bottom: 40px;
+    }}
+    .digital-output {{
+        font-family: {font_family};
+        font-size: 42px;
+        color: #00ffcc;
+        background-color: black;
+        padding: 15px 30px;
+        border-radius: 10px;
+        display: inline-block;
+        margin-top: 20px;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
-# Title
-st.markdown('<div class="main-title">📊 Stock Market Predictor</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-text">Predict the next day close price using market data</div>', unsafe_allow_html=True)
+# --- UI Title ---
+st.markdown('<div class="title">📊 Stock Market Predictor - Master Edition</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Weather Effects | Light/Dark Mode | Styled Prediction | Notes</div>', unsafe_allow_html=True)
 
-# Inputs
-st.header("📥 Enter Today's Market Data")
-col1, col2 = st.columns(2)
+# --- Input Form ---
+with st.form("predict_form"):
+    col1, col2 = st.columns(2)
+    with col1:
+        date_input = st.date_input("📅 Date", value=date.today())
+        open_price = st.number_input("Open Price", min_value=0.0, format="%.2f")
+        high_price = st.number_input("High Price", min_value=0.0, format="%.2f")
+    with col2:
+        low_price = st.number_input("Low Price", min_value=0.0, format="%.2f")
+        close_price = st.number_input("Close Price", min_value=0.0, format="%.2f")
+        volume = st.number_input("Volume", min_value=0)
 
-with col1:
-    date_input = st.date_input("Date")
-    open_price = st.number_input("Open Price", min_value=0.0, format="%.2f")
-    high_price = st.number_input("High Price", min_value=0.0, format="%.2f")
-    
-with col2:
-    low_price = st.number_input("Low Price", min_value=0.0, format="%.2f")
-    close_price = st.number_input("Close Price", min_value=0.0, format="%.2f")
-    volume = st.number_input("Volume", min_value=0)
+    # Notes area
+    st.markdown("🗒️ **Write your market notes:**")
+    notes = st.text_area("Notes", placeholder="Eg: Market may rise due to Fed meeting...")
 
-# Convert date to UNIX
-unix_date = int(np.datetime64(date_input).astype(np.int64) // 10**9)
+    # Buttons
+    col3, col4 = st.columns([1, 1])
+    with col3:
+        predict_btn = st.form_submit_button("🚀 Predict")
+    with col4:
+        reset_btn = st.form_submit_button("🔄 Reset")
 
-# Predict button
-st.markdown("### 📈 Prediction Result")
-if st.button("Predict Next Day Close"):
+# --- Reset Action ---
+if reset_btn:
+    st.experimental_rerun()
+
+# --- Prediction Logic ---
+if predict_btn:
+    unix_date = int(np.datetime64(date_input).astype(np.int64) // 10**9)
     input_data = [[unix_date, open_price, high_price, low_price, close_price, volume]]
     prediction = model.predict(input_data)
-    st.success(f"✅ Predicted Next Day Close Price: **${prediction[0]:.2f}**")
+
+    st.markdown("### ✅ **Predicted Close Price for Next Day**")
+    st.markdown(f'<div class="digital-output">${prediction[0]:.2f}</div>', unsafe_allow_html=True)
