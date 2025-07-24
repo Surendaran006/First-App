@@ -7,78 +7,77 @@ from datetime import date
 with open('Sura.pkl', 'rb') as file:
     model = pickle.load(file)
 
-# --- Page Config ---
-st.set_page_config(page_title="📈 Master Stock Predictor", layout="wide")
+# Page config
+st.set_page_config(page_title="🌟 Sura Stock Master", layout="wide")
 
-# --- Theme Toggle ---
-theme_mode = st.radio("🌗 Select Theme", ["Light", "Dark"], horizontal=True)
+# --- User Choices ---
+theme = st.radio("🌗 Theme", ["Light", "Dark"], horizontal=True)
+weather = st.selectbox("⛅ Weather", ["Clear", "Rainy", "Snowy", "Sunset"])
+font_style = st.selectbox("🔤 Font Style", ["Digital", "Monospace", "Bold"])
 
-# --- Font Style Toggle ---
-font_style = st.selectbox("🔢 Number Font Style", ["Digital", "Monospace", "Bold"])
-
-# --- Background Theme (Weather Mode) ---
-weather = st.selectbox("🌦️ Choose Weather Mode", ["Clear", "Rainy", "Snowy", "Sunset"])
-
-# --- Custom Styling Based on Selections ---
-bg_image = {
+# Background images for weather
+weather_backgrounds = {
     "Clear": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
     "Rainy": "https://i.gifer.com/7VE.gif",
     "Snowy": "https://i.gifer.com/ZZ5H.gif",
     "Sunset": "https://images.unsplash.com/photo-1501973801540-537f08ccae7f"
-}[weather]
+}
+bg_url = weather_backgrounds[weather]
 
-# Color Themes
-text_color = "#ffffff" if theme_mode == "Dark" else "#000000"
-bg_color = "#0e0e0e" if theme_mode == "Dark" else "#f5f5f5"
-
-# Font Styles
+# Font CSS
 font_family = {
     "Digital": "'Courier New', monospace",
     "Monospace": "monospace",
     "Bold": "'Segoe UI', sans-serif"
 }[font_style]
 
-# --- Apply All CSS ---
+# Theme Colors
+text_color = "#fff" if theme == "Dark" else "#000"
+panel_color = "#000000cc" if theme == "Dark" else "#ffffffcc"
+
+# --- Custom CSS ---
 st.markdown(f"""
     <style>
-    body {{
-        background-image: url('{bg_image}');
+    .main-container {{
+        background: url("{bg_url}") no-repeat center center fixed;
         background-size: cover;
-        background-attachment: fixed;
+        padding: 20px;
+        border-radius: 12px;
         color: {text_color};
     }}
     .title {{
         font-size: 40px;
         font-weight: bold;
-        color: {text_color};
         text-align: center;
-        margin-bottom: 5px;
-    }}
-    .subtitle {{
-        text-align: center;
+        margin-bottom: 10px;
         color: {text_color};
-        font-size: 16px;
-        margin-bottom: 40px;
     }}
-    .digital-output {{
+    .digital {{
         font-family: {font_family};
-        font-size: 42px;
-        color: #00ffcc;
-        background-color: black;
+        font-size: 38px;
+        color: #00ffee;
+        background: black;
         padding: 15px 30px;
-        border-radius: 10px;
         display: inline-block;
+        border-radius: 10px;
         margin-top: 20px;
+    }}
+    .glass-panel {{
+        background: {panel_color};
+        padding: 20px;
+        border-radius: 15px;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- UI Title ---
-st.markdown('<div class="title">📊 Stock Market Predictor - Master Edition</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Weather Effects | Light/Dark Mode | Styled Prediction | Notes</div>', unsafe_allow_html=True)
+# --- UI START ---
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
+st.markdown('<div class="title">📈 Sura’s Stock Market Master Predictor</div>', unsafe_allow_html=True)
 
-# --- Input Form ---
-with st.form("predict_form"):
+st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
+
+# --- Form Inputs ---
+with st.form("form"):
     col1, col2 = st.columns(2)
     with col1:
         date_input = st.date_input("📅 Date", value=date.today())
@@ -89,26 +88,29 @@ with st.form("predict_form"):
         close_price = st.number_input("Close Price", min_value=0.0, format="%.2f")
         volume = st.number_input("Volume", min_value=0)
 
-    # Notes area
-    st.markdown("🗒️ **Write your market notes:**")
-    notes = st.text_area("Notes", placeholder="Eg: Market may rise due to Fed meeting...")
+    # Notes
+    notes = st.text_area("🗒️ Notes", placeholder="Enter your market thoughts here...")
 
     # Buttons
-    col3, col4 = st.columns([1, 1])
+    col3, col4 = st.columns(2)
     with col3:
-        predict_btn = st.form_submit_button("🚀 Predict")
+        predict = st.form_submit_button("🚀 Predict")
     with col4:
-        reset_btn = st.form_submit_button("🔄 Reset")
+        reset = st.form_submit_button("🔄 Reset")
 
-# --- Reset Action ---
-if reset_btn:
+st.markdown('</div>', unsafe_allow_html=True)  # Close glass panel
+
+# Reset
+if reset:
     st.experimental_rerun()
 
-# --- Prediction Logic ---
-if predict_btn:
+# Prediction logic
+if predict:
     unix_date = int(np.datetime64(date_input).astype(np.int64) // 10**9)
     input_data = [[unix_date, open_price, high_price, low_price, close_price, volume]]
     prediction = model.predict(input_data)
+    st.markdown("### ✅ **Predicted Next Day Close Price:**")
+    st.markdown(f'<div class="digital">${prediction[0]:.2f}</div>', unsafe_allow_html=True)
 
-    st.markdown("### ✅ **Predicted Close Price for Next Day**")
-    st.markdown(f'<div class="digital-output">${prediction[0]:.2f}</div>', unsafe_allow_html=True)
+# End main container
+st.markdown('</div>', unsafe_allow_html=True)
