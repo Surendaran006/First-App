@@ -6,46 +6,55 @@ import pickle
 with open('Sura.pkl', 'rb') as file:
     model = pickle.load(file)
 
-# App Title
-st.set_page_config(page_title="Stock Predictor 🌦️", layout="wide")
+# Page config
+st.set_page_config(page_title="Stock Predictor 🌧️", layout="wide")
 st.title("📈 Stock Market - Next Day Close Price Prediction")
 
-# --- Weather Theme Selection ---
+# Weather selector
 theme = st.selectbox("Choose Theme 🌤️", ["Default", "Rainy", "Winter", "Summer"])
 
-# --- Apply Weather Themes using HTML/CSS ---
+# --- RAIN DROPS EFFECT ---
 if theme == "Rainy":
-    st.markdown("""
+    st.markdown(
+        """
         <style>
         body {
-            background-image: url("https://i.gifer.com/7VE.gif");
-            background-size: cover;
-            color: white;
+            background: #0e0e0e;
+            overflow: hidden;
+        }
+        .rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .drop {
+            position: absolute;
+            bottom: 100%;
+            width: 2px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.4);
+            animation: fall 1s linear infinite;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
         }
         </style>
-        """, unsafe_allow_html=True)
+        <div class="rain">
+        """ + 
+        ''.join([f'<div class="drop" style="left:{i}%; animation-delay: {i*0.03}s;"></div>' for i in range(100)]) +
+        """
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
 
-elif theme == "Winter":
-    st.markdown("""
-        <style>
-        body {
-            background-image: url("https://i.gifer.com/ZZ5H.gif");
-            background-size: cover;
-            color: white;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-elif theme == "Summer":
-    st.markdown("""
-        <style>
-        body {
-            background: linear-gradient(to right, #ffecd2 0%, #fcb69f 100%);
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-# Sidebar Inputs
+# --- Inputs in Sidebar ---
 st.sidebar.header("Enter Stock Data")
 
 date_input = st.sidebar.date_input("📅 Date")
@@ -55,10 +64,10 @@ low_price = st.sidebar.number_input("Low Price", min_value=0.0)
 close_price = st.sidebar.number_input("Close Price", min_value=0.0)
 volume = st.sidebar.number_input("Volume", min_value=0)
 
-# Date to Unix
+# Convert date
 unix_date = int(np.datetime64(date_input).astype(np.int64) // 10**9)
 
-# Predict Button
+# Predict button
 if st.sidebar.button("🚀 Predict Next Day Close"):
     input_data = [[unix_date, open_price, high_price, low_price, close_price, volume]]
     prediction = model.predict(input_data)
